@@ -20,6 +20,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
@@ -39,8 +40,8 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_ACCESS_COARSE_LOCATION = 2;
     private BluetoothAdapter mBluetoothAdapter;
     BluetoothSocket mSocket;
-    List<String> mDevices;
-    ArrayAdapter<String> mAdapter;
+    List<MyDevice> mDevices;
+    ArrayAdapter<MyDevice> mAdapter;
     private Button mConnectBtn;
     /**打开红色Led按钮*/
     private Button mTurnOnRedBtn;
@@ -68,7 +69,19 @@ public class MainActivity extends AppCompatActivity {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 String name = device.getName();
                 String address = device.getAddress();
-                mDevices.add(name+"   "+address);
+                boolean bonded = false;
+                Set<BluetoothDevice> bondedDevices = mBluetoothAdapter.getBondedDevices();
+                for(BluetoothDevice tempDevice:bondedDevices){
+                    if(tempDevice.getAddress().equals(address)){
+                        bonded = true;
+                    }
+                }
+
+                MyDevice myDevice =  new MyDevice();
+                myDevice.setName(name);
+                myDevice.setAddress(address);
+                myDevice.setBonded(bonded);
+                mDevices.add(myDevice);
                 mAdapter.notifyDataSetChanged();
                 Log.i("tag", "onReceive: name="+name);
             }
@@ -112,7 +125,7 @@ public class MainActivity extends AppCompatActivity {
         mTurnOffGreenBtn = findViewById(R.id.btn_turn_off_green);
 
         mDevices = new ArrayList<>();
-        mAdapter = new ArrayAdapter<String>(MainActivity.this,
+        mAdapter = new ArrayAdapter<MyDevice>(MainActivity.this,
                 android.R.layout.simple_list_item_1,mDevices);
     }
 
@@ -126,37 +139,6 @@ public class MainActivity extends AppCompatActivity {
         setBtnCallBack(mTurnOffYellowBtn);
         setBtnCallBack(mTurnOnGreenBtn);
         setBtnCallBack(mTurnOffGreenBtn);
-        mConnectBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String macAddr = "20:15:05:25:02:43";
-                BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(macAddr);
-                UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
-                try {
-                    mSocket = device.createRfcommSocketToServiceRecord(uuid);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                new Thread(){
-                    @Override
-                    public void run() {
-                        mBluetoothAdapter.cancelDiscovery();
-                        try {
-                            mSocket.connect();
-                            new ConnectedThread().start();
-                        } catch (IOException e) {
-                            try {
-                                mSocket.close();
-                            } catch (IOException e1) {
-                                e1.printStackTrace();
-                            }
-                            e.printStackTrace();
-                        }
-                        super.run();
-                    }
-                }.start();
-            }
-        });
     }
 
     /**
@@ -212,25 +194,61 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * 显示搜索列表
+     */
     private void showScanDeviceDialog(){
         View scanDialogView = getLayoutInflater().inflate(R.layout.dialog_scan_device,null);
         Button cancleBtn= scanDialogView.findViewById(R.id.btn_cancel_scan);
         mDeviceListView = scanDialogView.findViewById(R.id.lvw_devices);
         mDeviceListView.setAdapter(mAdapter);
+        mDeviceListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                mScanDialog.dismiss();
+                String address = mDevices.get(i).getAddress();
+                BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
+                UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
+                try {
+                    mSocket = device.createRfcommSocketToServiceRecord(uuid);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                new Thread(){
+                    @Override
+                    public void run() {
+                        mBluetoothAdapter.cancelDiscovery();
+                        try {
+                            mSocket.connect();
+                            new ConnectedThread().start();
+                        } catch (IOException e) {
+                            try {
+                                mSocket.close();
+                            } catch (IOException e1) {
+                                e1.printStackTrace();
+                            }
+                            e.printStackTrace();
+                        }
+                        super.run();
+                    }
+                }.start();
+            }
+        });
         cancleBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Toast.makeText(MainActivity.this,"cancel discovery",Toast.LENGTH_LONG).show();
-
+                mScanDialog.dismiss();
             }
         });
 
-        AlertDialog scanDialog = new AlertDialog.Builder(MainActivity.this)
+        mScanDialog = new AlertDialog.Builder(MainActivity.this)
                 .setView(scanDialogView)
                 .create();
-        scanDialog.show();
+        mScanDialog.show();
     }
 
+    AlertDialog mScanDialog;
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
