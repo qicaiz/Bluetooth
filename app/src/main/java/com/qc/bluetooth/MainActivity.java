@@ -111,17 +111,9 @@ public class MainActivity extends AppCompatActivity {
         mTurnOnGreenBtn = findViewById(R.id.btn_turn_on_green);
         mTurnOffGreenBtn = findViewById(R.id.btn_turn_off_green);
 
-        mDeviceListView = new ListView(MainActivity.this);
-        TextView chooseDevice = new TextView(this);
-        chooseDevice.setText("choose device");
-        mDeviceListView.addHeaderView(chooseDevice);
-        Button cancelScanBtn = new Button(this);
-        cancelScanBtn.setText("cancel");
-        mDeviceListView.addFooterView(cancelScanBtn);
         mDevices = new ArrayList<>();
         mAdapter = new ArrayAdapter<String>(MainActivity.this,
                 android.R.layout.simple_list_item_1,mDevices);
-        mDeviceListView.setAdapter(mAdapter);
     }
 
     /**
@@ -211,21 +203,32 @@ public class MainActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if(requestCode==REQUEST_ACCESS_COARSE_LOCATION){
             if(grantResults.length>0 && grantResults[0]==PackageManager.PERMISSION_GRANTED){
-
-                if(mBluetoothAdapter.isDiscovering()){
-                    mBluetoothAdapter.cancelDiscovery();
-                }
                 mBluetoothAdapter.startDiscovery();
-                AlertDialog scanDialog = new AlertDialog.Builder(MainActivity.this)
-                        .setView(mDeviceListView)
-                        .create();
-                scanDialog.show();
-
+                showScanDeviceDialog();
             } else {
                 Toast.makeText(MainActivity.this,"action found is not granted.",Toast.LENGTH_LONG).show();
             }
 
         }
+    }
+
+    private void showScanDeviceDialog(){
+        View scanDialogView = getLayoutInflater().inflate(R.layout.dialog_scan_device,null);
+        Button cancleBtn= scanDialogView.findViewById(R.id.btn_cancel_scan);
+        mDeviceListView = scanDialogView.findViewById(R.id.lvw_devices);
+        mDeviceListView.setAdapter(mAdapter);
+        cancleBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(MainActivity.this,"cancel discovery",Toast.LENGTH_LONG).show();
+
+            }
+        });
+
+        AlertDialog scanDialog = new AlertDialog.Builder(MainActivity.this)
+                .setView(scanDialogView)
+                .create();
+        scanDialog.show();
     }
 
     @Override
@@ -254,19 +257,16 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()){
             case R.id.scan_menu:
-                //scan device
+                if(mBluetoothAdapter.isDiscovering()){
+                    mBluetoothAdapter.cancelDiscovery();
+                }
+                mDevices.clear();
                 //check permission
                 if(ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION)
                         == PackageManager.PERMISSION_GRANTED){
                     Toast.makeText(MainActivity.this,"搜索回调权限已开启",Toast.LENGTH_SHORT).show();
-                    if(mBluetoothAdapter.isDiscovering()){
-                        mBluetoothAdapter.cancelDiscovery();
-                    }
                     mBluetoothAdapter.startDiscovery();
-                    AlertDialog scanDialog = new AlertDialog.Builder(MainActivity.this)
-                            .setView(mDeviceListView)
-                            .create();
-                    scanDialog.show();
+                    showScanDeviceDialog();
                 }else{
                     Toast.makeText(MainActivity.this,"搜索回调权限未开启",Toast.LENGTH_SHORT).show();
                     ActivityCompat.requestPermissions(MainActivity.this,
