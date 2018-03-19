@@ -42,7 +42,8 @@ public class MainActivity extends AppCompatActivity {
     BluetoothSocket mSocket;
     List<MyDevice> mDevices;
     ArrayAdapter<MyDevice> mAdapter;
-    private Button mConnectBtn;
+    /**连接信息*/
+    private TextView mConnectInfo;
     /**打开红色Led按钮*/
     private Button mTurnOnRedBtn;
     /**关闭红色Led按钮*/
@@ -116,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
      * 初始化控件
      */
     private void initViews(){
-        mConnectBtn = findViewById(R.id.btn_connect);
+        mConnectInfo = findViewById(R.id.txt_connect_info);
         mTurnOnRedBtn = findViewById(R.id.btn_turn_on_red);
         mTurnOffRedBtn = findViewById(R.id.btn_turn_off_red);
         mTurnOnYellowBtn = findViewById(R.id.btn_turn_on_yellow);
@@ -139,6 +140,19 @@ public class MainActivity extends AppCompatActivity {
         setBtnCallBack(mTurnOffYellowBtn);
         setBtnCallBack(mTurnOnGreenBtn);
         setBtnCallBack(mTurnOffGreenBtn);
+        mConnectInfo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(mSocket!=null){
+                    try {
+                        mSocket.close();
+                        mConnectInfo.setText("未连接设备");
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
     }
 
     /**
@@ -206,7 +220,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 mScanDialog.dismiss();
-                String address = mDevices.get(i).getAddress();
+                final String name = mDevices.get(i).getName();
+                final String address = mDevices.get(i).getAddress();
                 BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
                 UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
                 try {
@@ -220,6 +235,13 @@ public class MainActivity extends AppCompatActivity {
                         mBluetoothAdapter.cancelDiscovery();
                         try {
                             mSocket.connect();
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    mConnectInfo.setText(name+" - "+address+" 已连接(轻触断开连接）");
+                                }
+                            });
+
                             new ConnectedThread().start();
                         } catch (IOException e) {
                             try {
