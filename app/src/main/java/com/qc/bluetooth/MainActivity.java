@@ -23,6 +23,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -42,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
     BluetoothSocket mSocket;
     List<MyDevice> mDevices;
     ArrayAdapter<MyDevice> mAdapter;
+    private ImageView mConnectStatusImg;
     /**连接信息*/
     private TextView mConnectInfo;
     /**打开红色Led按钮*/
@@ -117,6 +119,7 @@ public class MainActivity extends AppCompatActivity {
      * 初始化控件
      */
     private void initViews(){
+        mConnectStatusImg = findViewById(R.id.image_connect_status);
         mConnectInfo = findViewById(R.id.txt_connect_info);
         mTurnOnRedBtn = findViewById(R.id.btn_turn_on_red);
         mTurnOffRedBtn = findViewById(R.id.btn_turn_off_red);
@@ -147,6 +150,7 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         mSocket.close();
                         mConnectInfo.setText("未连接设备");
+                        mConnectStatusImg.setImageResource(R.drawable.disconnect);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -239,6 +243,7 @@ public class MainActivity extends AppCompatActivity {
                                 @Override
                                 public void run() {
                                     mConnectInfo.setText(name+" - "+address+" 已连接(轻触断开连接）");
+                                    mConnectStatusImg.setImageResource(R.drawable.connect);
                                 }
                             });
 
