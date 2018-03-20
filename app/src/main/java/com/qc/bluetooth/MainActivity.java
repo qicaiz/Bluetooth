@@ -167,6 +167,11 @@ public class MainActivity extends AppCompatActivity {
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                //检查是否连接了蓝牙设备
+                if(mSocket==null){
+                    Toast.makeText(MainActivity.this,"请连接蓝牙设备",Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 String signal = null;
                 switch (btn.getId()){
                     case R.id.btn_turn_on_red:
