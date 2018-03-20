@@ -327,8 +327,8 @@ public class MainActivity extends AppCompatActivity {
             case R.id.about_menu:
                 //
                 AlertDialog aboutDialog = new AlertDialog.Builder(MainActivity.this)
-                        .setTitle("title")
-                        .setMessage("about content")
+                        .setTitle("蓝牙串口通信")
+                        .setMessage("Powered by 启才")
                         .setPositiveButton("ok", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
