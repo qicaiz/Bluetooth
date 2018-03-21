@@ -146,14 +146,29 @@ public class MainActivity extends AppCompatActivity {
         mConnectInfo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(mSocket!=null){
-                    try {
-                        mSocket.close();
-                        mConnectInfo.setText("未连接设备");
-                        mConnectStatusImg.setImageResource(R.drawable.disconnect);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                if(mSocket!=null && mSocket.isConnected()){
+                    AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this)
+                            .setTitle("确定要断开连接吗？")
+                            .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    try {
+                                        mSocket.close();
+                                        mConnectInfo.setText("未连接设备");
+                                        mConnectStatusImg.setImageResource(R.drawable.disconnect);
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            })
+                            .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+
+                                }
+                            }).create();
+                    alertDialog.show();
+
                 }
             }
         });
@@ -168,7 +183,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 //检查是否连接了蓝牙设备
-                if(mSocket==null){
+                if(mSocket==null || !mSocket.isConnected()){
                     Toast.makeText(MainActivity.this,"请连接蓝牙设备",Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -269,7 +284,6 @@ public class MainActivity extends AppCompatActivity {
         cancleBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(MainActivity.this,"cancel discovery",Toast.LENGTH_LONG).show();
                 mScanDialog.dismiss();
             }
         });
@@ -314,11 +328,9 @@ public class MainActivity extends AppCompatActivity {
                 //check permission
                 if(ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION)
                         == PackageManager.PERMISSION_GRANTED){
-                    Toast.makeText(MainActivity.this,"搜索回调权限已开启",Toast.LENGTH_SHORT).show();
                     mBluetoothAdapter.startDiscovery();
                     showScanDeviceDialog();
                 }else{
-                    Toast.makeText(MainActivity.this,"搜索回调权限未开启",Toast.LENGTH_SHORT).show();
                     ActivityCompat.requestPermissions(MainActivity.this,
                             new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},REQUEST_ACCESS_COARSE_LOCATION);
                 }
