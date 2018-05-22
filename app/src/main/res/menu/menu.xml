@@ -7,7 +7,5 @@
         android:title="扫描设备"
         app:showAsAction="never"
         />
-    <item
-        android:id="@+id/about_menu"
-        android:title="关于"/>
+    
 </menu>

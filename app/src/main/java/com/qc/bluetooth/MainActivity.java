@@ -336,20 +336,6 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 return true;
-            case R.id.about_menu:
-                //
-                AlertDialog aboutDialog = new AlertDialog.Builder(MainActivity.this)
-                        .setTitle("蓝牙串口通信")
-                        .setMessage("Powered by 启才")
-                        .setPositiveButton("ok", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-
-                            }
-                        }).create();
-                aboutDialog.show();
-
-                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
