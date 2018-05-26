@@ -39,10 +39,15 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_ENABLE_BT = 1;
     private static final int REQUEST_ACCESS_COARSE_LOCATION = 2;
+    /**蓝牙适配器*/
     private BluetoothAdapter mBluetoothAdapter;
+    /**蓝牙通信socket*/
     BluetoothSocket mSocket;
+    /**蓝牙设备集合*/
     List<MyDevice> mDevices;
+    /**设备列表控件适配器*/
     ArrayAdapter<MyDevice> mAdapter;
+    /**连接状态指示图片*/
     private ImageView mConnectStatusImg;
     /**连接信息*/
     private TextView mConnectInfo;
@@ -60,26 +65,25 @@ public class MainActivity extends AppCompatActivity {
     private Button mTurnOffGreenBtn;
     private ListView mDeviceListView;
 
+    /**蓝牙搜索监听器*/
     private BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             Log.i("onreceive", "onReceive: ");
             String action = intent.getAction();
-            if(BluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action)){
-
-            }
             if(BluetoothDevice.ACTION_FOUND.equals(action)){
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 String name = device.getName();
                 String address = device.getAddress();
                 boolean bonded = false;
                 Set<BluetoothDevice> bondedDevices = mBluetoothAdapter.getBondedDevices();
+                //检查设备是否已配对
                 for(BluetoothDevice tempDevice:bondedDevices){
                     if(tempDevice.getAddress().equals(address)){
                         bonded = true;
                     }
                 }
-
+                //刷新设备显示列表
                 MyDevice myDevice =  new MyDevice();
                 myDevice.setName(name);
                 myDevice.setAddress(address);
@@ -99,13 +103,13 @@ public class MainActivity extends AppCompatActivity {
         initViews();
         //初始化回调事件
         initEvents();
-        //check Bluetooth support
+        //检查手机是否有蓝牙设备
         mBluetoothAdapter  = BluetoothAdapter.getDefaultAdapter();
         if(mBluetoothAdapter==null){
             Toast.makeText(MainActivity.this,"There is no Bluetooth device.",Toast.LENGTH_LONG).show();
             finish();
         }
-        //check is Bluetooth enable
+        //检查蓝牙是否已经打开
         if(!mBluetoothAdapter.isEnabled()){
             Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(intent,REQUEST_ENABLE_BT);
@@ -176,6 +180,10 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * 设置按钮回调
+     * 发送的数据
+     * 1：打开红色LED    2：关闭红色LED
+     * 3：打开黄色LED    4：关闭黄色LED
+     * 5：打开绿色LED    6：关闭绿色LED
      * @param btn 按钮
      */
     private void setBtnCallBack(final Button btn){
@@ -218,6 +226,12 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * 权限申请结果回调方法
+     * @param requestCode
+     * @param permissions
+     * @param grantResults
+     */
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -233,7 +247,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * 显示搜索列表
+     * 通过对话框显示设备搜索列表
      */
     private void showScanDeviceDialog(){
         View scanDialogView = getLayoutInflater().inflate(R.layout.dialog_scan_device,null);
@@ -317,6 +331,11 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    /**
+     * 菜单按钮回调方法
+     * @param item
+     * @return
+     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()){
